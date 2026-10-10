@@ -34,3 +34,14 @@ button {
         background-position: 0% 50%;
     }
 }
+
+/* Fix browser autofill styling on inputs */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+    -webkit-text-fill-color: #fff;
+    caret-color: #fff;
+    -webkit-box-shadow: 0 0 0 1000px #0f172a inset;
+    transition: background-color 9999s ease-in-out 0s;
+}
