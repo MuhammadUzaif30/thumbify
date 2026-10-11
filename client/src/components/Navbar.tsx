@@ -4,6 +4,7 @@ import { motion } from "motion/react";
 import { navlinks } from "../data/navlinks";
 import type { INavLink } from "../types";
 import { Link, NavLink, useNavigate } from "react-router-dom";
+import logo from '../../public/logo.svg'
 
 export default function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
@@ -19,7 +20,7 @@ export default function Navbar() {
                 transition={{ type: "spring", stiffness: 250, damping: 70, mass: 1 }}
             >
                 <Link to='/'>
-                <img src="logo.svg" alt="logo" className="h-8.5 w-auto"/>
+                <img src={logo} alt="logo" className="h-8.5 w-auto"/>
                 </Link>
 
                 <div className="hidden md:flex items-center gap-8 transition duration-500">

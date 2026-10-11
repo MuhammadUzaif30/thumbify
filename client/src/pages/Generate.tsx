@@ -1,24 +1,47 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
 import SoftBackdop from "../components/SoftBackdop"
-import { colorSchemes, type AspectRatio, type IThumbnail, type ThumbnailStyle } from "../../assets/assets"
+import { colorSchemes, dummyThumbnails, type AspectRatio, type IThumbnail, type ThumbnailStyle } from "../../assets/assets"
 import AspectRatioSelector from "../components/AspectRatioSelector"
 import StyleSelector from "../components/StyleSelector"
 import ColorSchemeSelector from "../components/ColorSchemeSelector"
+import PreviewPanel from "../components/PreviewPanel"
 
 const Generate = () => {
     const { id } = useParams<{ id: string }>()
     const [title, setTitle] = useState("")
     const [additionalDetails, setAdditionalDetails] = useState("")
-    
+
     const [thumbnail, setThumbnail] = useState<IThumbnail | null>(null)
     const [loading, setLoading] = useState(false)
-    
+
     const [aspectRatio, setAspectRatio] = useState<AspectRatio>("16:9")
     const [colorSchemeId, setColorSchemeId] = useState<string>(colorSchemes[0].id)
     const [style, setStyle] = useState<ThumbnailStyle>("Bold & Graphic")
-    
+
     const [styleDropdownOpen, setStyleDropdownOpen] = useState(false)
+
+    const handleGenerate = () => {
+
+    }
+    const fetchThumbnail = async () => {
+        if(id) {
+            const thumbnail : any = dummyThumbnails.find((thumbnail) => thumbnail.
+        _id === id);
+        setThumbnail(thumbnail)
+        setAdditionalDetails(thumbnail.user_prompt)
+        setTitle(thumbnail.title)
+        setColorSchemeId(thumbnail.color_scheme)
+        setAspectRatio(thumbnail.aspect_ratio)
+        setStyle(thumbnail.style)
+        setLoading(false)
+        }
+    }
+    useEffect(() => {
+        if(id) {
+            fetchThumbnail()
+        }
+    } , [id])
 
     return (
         <>
@@ -47,45 +70,48 @@ const Generate = () => {
                                             className="w-full px-4 py-3 rounded-lg border border-white/12 bg-black/20 text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-pink-500"
                                         />
                                         <div className="flex justify-end">
-                                          <span className="text-xs text-zinc-400">
-                                            {title.length}/100
-                                          </span>
+                                            <span className="text-xs text-zinc-400">
+                                                {title.length}/100
+                                            </span>
                                         </div>
                                     </div>
-                                    {/*AspectRatioSelector*/}
+
+                                    {/* ASPECT RATIO SELECTOR */}
                                     <AspectRatioSelector
-                                    value={aspectRatio} 
-                                    onChange={setAspectRatio}/>
-                                    {/*StyleSelector*/}
-                                    <StyleSelector
-                                    value={style}
-                                    onChange={setStyle} 
-                                    isOpen={styleDropdownOpen}
-                                    setIsOpen={setStyleDropdownOpen}
+                                        value={aspectRatio}
+                                        onChange={setAspectRatio}
                                     />
-                                    {/*ColorSchemeSelector*/}
-                                    <ColorSchemeSelector 
-                                    value={colorSchemeId} 
-                                    onChange={setColorSchemeId}/>
-                                    {/*Details*/}
+
+                                    {/* STYLE SELECTOR */}
+                                    <StyleSelector
+                                        value={style}
+                                        onChange={setStyle}
+                                        isOpen={styleDropdownOpen}
+                                        setIsOpen={setStyleDropdownOpen}
+                                    />
+
+                                    {/* COLOR SCHEME SELECTOR */}
+                                    <ColorSchemeSelector
+                                        value={colorSchemeId}
+                                        onChange={setColorSchemeId}
+                                    />
+
+                                    {/* DETAILS */}
                                     <div className="space-y-2">
                                         <label className="block text-sm font-medium">
-                                          Additional Prompts 
-                                          <span className="text-zinc-400 text-xs">
-                                            (optional)
-                                          </span>
+                                            Additional Prompts{" "}
+                                            <span className="text-zinc-400 text-xs">
+                                                (optional)
+                                            </span>
                                         </label>
-                                        <textarea 
-                                        value={additionalDetails}
-                                        onChange={(e) =>setAdditionalDetails(e.target.value)}
-                                        rows={3}
-                                        placeholder="Add any specific elements, mods, or style preferences..."
-                                        className="w-full px-4 py-3 rounded-lg border border-white/10 bg-white/6 text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-pink-500 resize-none"
-                                        >
-
-                                        </textarea>
+                                        <textarea
+                                            value={additionalDetails}
+                                            onChange={(e) => setAdditionalDetails(e.target.value)}
+                                            rows={3}
+                                            placeholder="Add any specific elements, mods, or style preferences..."
+                                            className="w-full px-4 py-3 rounded-lg border border-white/10 bg-white/6 text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-pink-500 resize-none"
+                                        />
                                     </div>
-                                    
                                 </div>
 
                                 {/* BUTTON */}
@@ -93,10 +119,23 @@ const Generate = () => {
                                     <button
                                         disabled={loading}
                                         className="text-[15px] w-full py-3.5 rounded-xl font-medium bg-linear-to-b from-pink-500 to-pink-600 hover:from-pink-700 disabled:cursor-not-allowed transition-colors"
+                                        onClick={handleGenerate}
                                     >
                                         {loading ? "Generating..." : "Generate Thumbnail"}
                                     </button>
                                 )}
+                            </div>
+                        </div>
+
+                        {/* RIGHT PANEL */}
+                        <div>
+                            <div className="p-6 rounded-2xl bg-white/8 border border-white/10 shadow-xl">
+                                <h2 className="text-lg font-bold text-zinc-100 mb-4">Preview</h2>
+                                <PreviewPanel
+                                    thumbnail={thumbnail}
+                                    isLoading={loading}
+                                    aspectRatio={aspectRatio}
+                                />
                             </div>
                         </div>
                     </div>
