@@ -207,7 +207,7 @@ export const yt_html = `
                 <div class="flex items-center gap-4">
                     <button class="flex items-center gap-1 px-3 py-1 border border-ytBorder rounded-full"><i data-lucide="plus"></i> Create</button>
                     <i data-lucide="bell"></i>
-                    <img src="https://i.pravatar.cc/40" class="size-8 rounded-full" />
+                    <img src="https://ui-avatars.com/api/?name=User&background=random" class="size-8 rounded-full" />
                 </div>
             </header>
 
