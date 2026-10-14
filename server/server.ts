@@ -1,11 +1,13 @@
+import dns from "node:dns";
+dns.setServers(["8.8.8.8", "1.1.1.1"]);
+
 import "dotenv/config";
 import express, { Request, Response } from "express";
 import cors from "cors";
 import session from "express-session";
 import MongoStore from "connect-mongo";
 import connectDB from "./configs/db.js";
-import AuthRouter from "./routes/AuthRoutes.js"; // check this path matches your folder
-
+import AuthRouter from "./routes/AuthRoutes.js"; 
 declare module "express-session" {
     interface SessionData {
         isLoggedIn: boolean;
