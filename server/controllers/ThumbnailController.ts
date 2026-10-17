@@ -65,17 +65,13 @@ export const generateThumbnail = async (req: Request, res: Response) => {
         });
         thumbnailId = thumbnail._id.toString();
 
-        const model = "gemini-3-pro-image-preview";
+        const model = "gemini-2.5-flash-image";
 
         const generationConfig: GenerateContentConfig = {
             maxOutputTokens: 32768,
             temperature: 1,
             topP: 0.95,
             responseModalities: ["IMAGE"],
-            imageConfig: {
-                aspectRatio: aspect_ratio || "16:9",
-                imageSize: "1K",
-            },
         };
 
         let prompt = `Create a ${stylePrompts[style as keyof typeof stylePrompts]} for: "${title}". `;

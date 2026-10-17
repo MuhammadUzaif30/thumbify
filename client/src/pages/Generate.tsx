@@ -1,13 +1,19 @@
 import { useEffect, useState } from "react"
-import { useParams } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
 import SoftBackdop from "../components/SoftBackdop"
-import { colorSchemes, dummyThumbnails, type AspectRatio, type IThumbnail, type ThumbnailStyle } from "../../assets/assets"
+import { colorSchemes, type AspectRatio, type IThumbnail, type ThumbnailStyle } from "../../assets/assets"
 import AspectRatioSelector from "../components/AspectRatioSelector"
 import StyleSelector from "../components/StyleSelector"
 import ColorSchemeSelector from "../components/ColorSchemeSelector"
 import PreviewPanel from "../components/PreviewPanel"
+import { useAuth } from "../context/AuthContext"
+import api from "../configs/api"
+import toast from "react-hot-toast"
 
 const Generate = () => {
+    const navigate = useNavigate()
+    const { isLoggedIn } = useAuth()
+
     const { id } = useParams<{ id: string }>()
     const [title, setTitle] = useState("")
     const [additionalDetails, setAdditionalDetails] = useState("")
@@ -21,27 +27,64 @@ const Generate = () => {
 
     const [styleDropdownOpen, setStyleDropdownOpen] = useState(false)
 
-    const handleGenerate = () => {
+    const handleGenerate = async () => {
+        if (!isLoggedIn) return toast.error("Please login to generate thumbnails")
+        if (!title.trim()) return toast.error("Title is required")
 
-    }
-    const fetchThumbnail = async () => {
-        if(id) {
-            const thumbnail : any = dummyThumbnails.find((thumbnail) => thumbnail.
-        _id === id);
-        setThumbnail(thumbnail)
-        setAdditionalDetails(thumbnail.user_prompt)
-        setTitle(thumbnail.title)
-        setColorSchemeId(thumbnail.color_scheme)
-        setAspectRatio(thumbnail.aspect_ratio)
-        setStyle(thumbnail.style)
-        setLoading(false)
+        setLoading(true)
+        try {
+            const api_payload = {
+                title,
+                prompt: additionalDetails,
+                style,
+                aspect_ratio: aspectRatio,
+                color_scheme: colorSchemeId,
+                text_overlay: true,
+            }
+            const { data } = await api.post("/api/thumbnail/generate", api_payload)
+            if (data.thumbnail) {
+                toast.success(data.message)
+                navigate("/generate/" + data.thumbnail._id)
+            }
+        } catch (error: any) {
+            console.log(error)
+            toast.error(error?.response?.data?.message || error.message)
+        } finally {
+            setLoading(false)
         }
     }
+
+    const fetchThumbnail = async () => {
+        try {
+            const { data } = await api.get(`/api/user/thumbnail/${id}`)
+            const t = data?.thumbnail as IThumbnail | null
+            setThumbnail(t)
+            setLoading(!t?.image_url)
+            setAdditionalDetails(t?.user_prompt || "")
+            if (t?.color_scheme) setColorSchemeId(t.color_scheme)
+            if (t?.aspect_ratio) setAspectRatio(t.aspect_ratio as AspectRatio)
+            if (t?.style) setStyle(t.style as ThumbnailStyle)
+            if (t?.title) setTitle(t.title)
+        } catch (error: any) {
+            console.log(error)
+            toast.error(error?.response?.data?.message || error.message)
+        }
+    }
+
+    // load the thumbnail when opening /generate/:id
     useEffect(() => {
-        if(id) {
+        if (isLoggedIn && id) {
             fetchThumbnail()
         }
-    } , [id])
+    }, [id, isLoggedIn])
+
+    // poll while it's still generating (e.g. after a page refresh)
+    useEffect(() => {
+        if (id && loading && isLoggedIn) {
+            const interval = setInterval(fetchThumbnail, 5000)
+            return () => clearInterval(interval)
+        }
+    }, [id, loading, isLoggedIn])
 
     return (
         <>
