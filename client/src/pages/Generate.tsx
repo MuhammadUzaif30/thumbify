@@ -43,6 +43,7 @@ const Generate = () => {
             }
             const { data } = await api.post("/api/thumbnail/generate", api_payload)
             if (data.thumbnail) {
+                setThumbnail(data.thumbnail)
                 toast.success(data.message)
                 navigate("/generate/" + data.thumbnail._id)
             }
@@ -54,12 +55,23 @@ const Generate = () => {
         }
     }
 
+    const handleCreateNew = () => {
+        setTitle("")
+        setAdditionalDetails("")
+        setThumbnail(null)
+        navigate("/generate")
+    }
+
     const fetchThumbnail = async () => {
         try {
             const { data } = await api.get(`/api/user/thumbnail/${id}`)
             const t = data?.thumbnail as IThumbnail | null
             setThumbnail(t)
-            setLoading(!t?.image_url)
+            setLoading(!!t?.isGenerating)
+            if (t && !t.isGenerating && !t.image_url) {
+                toast.error("This generation failed. Please create a new one.")
+                navigate("/generate")
+            }
             setAdditionalDetails(t?.user_prompt || "")
             if (t?.color_scheme) setColorSchemeId(t.color_scheme)
             if (t?.aspect_ratio) setAspectRatio(t.aspect_ratio as AspectRatio)
@@ -78,6 +90,13 @@ const Generate = () => {
         }
     }, [id, isLoggedIn])
 
+    // clear the old preview when going back to /generate
+    useEffect(() => {
+        if (!id) {
+            setThumbnail(null)
+        }
+    }, [id])
+
     // poll while it's still generating (e.g. after a page refresh)
     useEffect(() => {
         if (id && loading && isLoggedIn) {
@@ -93,14 +112,15 @@ const Generate = () => {
                 <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-28 lg:pb-8">
                     <div className="grid lg:grid-cols-[400px_1fr] gap-8">
                         {/* LEFT PANEL */}
-                        <div className={`space-y-6 ${id ? "pointer-events-none" : ""}`}>
+                        <div className="space-y-6">
                             <div className="p-6 rounded-2xl bg-white/8 border border-white/12 shadow-xl space-y-6">
                                 <div>
                                     <h2 className="text-xl font-bold text-zinc-100 mb-1">Create Your Thumbnail</h2>
                                     <p className="text-sm text-zinc-400">Describe your vision and let AI bring it to life</p>
                                 </div>
 
-                                <div className="space-y-5">
+                                {/* fields lock when viewing a saved thumbnail */}
+                                <div className={`space-y-5 ${id ? "pointer-events-none opacity-80" : ""}`}>
                                     {/* TITLE INPUT */}
                                     <div className="space-y-2">
                                         <label className="block text-sm font-medium">Title or Topic</label>
@@ -158,7 +178,14 @@ const Generate = () => {
                                 </div>
 
                                 {/* BUTTON */}
-                                {!id && (
+                                {id ? (
+                                    <button
+                                        className="text-[15px] w-full py-3.5 rounded-xl font-medium bg-linear-to-b from-pink-500 to-pink-600 hover:from-pink-700 transition-colors"
+                                        onClick={handleCreateNew}
+                                    >
+                                        Create New Thumbnail
+                                    </button>
+                                ) : (
                                     <button
                                         disabled={loading}
                                         className="text-[15px] w-full py-3.5 rounded-xl font-medium bg-linear-to-b from-pink-500 to-pink-600 hover:from-pink-700 disabled:cursor-not-allowed transition-colors"

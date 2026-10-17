@@ -44,7 +44,7 @@ app.get("/", (req: Request, res: Response) => {
 app.use("/api/auth", AuthRouter);
 app.use("/api/thumbnail" , ThumbnailRouter)
 app.use("/api/user" , UserRouter)
-
+   app.use("/images", express.static("images"));
 const port = process.env.PORT || 3000;
 
 const start = async () => {

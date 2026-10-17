@@ -5,6 +5,7 @@ import type { IThumbnail } from "../../assets/assets";
 import { ArrowUpRightIcon, DownloadIcon, TrashIcon } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import api from "../configs/api";
+import { downloadImage } from "../configs/download";
 import toast from "react-hot-toast";
 
 const aspectRatioClassMap: Record<string, string> = {
@@ -41,12 +42,8 @@ const MyGeneration = () => {
     }
   }, [isLoggedIn]);
 
-  const handleDownload = (image_url: string) => {
-    const link = document.createElement("a");
-    link.href = image_url.replace("/upload/", "/upload/fl_attachment/");
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+  const handleDownload = (image_url: string, title: string) => {
+    downloadImage(image_url, title);
   };
 
   const handleDelete = async (id: string) => {
@@ -176,7 +173,7 @@ const MyGeneration = () => {
                       <>
                         <button
                           type="button"
-                          onClick={() => handleDownload(thumb.image_url!)}
+                          onClick={() => handleDownload(thumb.image_url!, thumb.title)}
                           aria-label="Download"
                         >
                           <DownloadIcon className="size-6 bg-black/50 p-1 rounded hover:bg-pink-600 transition-all" />
