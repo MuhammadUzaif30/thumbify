@@ -70,10 +70,10 @@ app.use("/api/user", UserRouter);
 
 // Only start a listener locally. On Vercel the platform calls the exported app.
 if (!process.env.VERCEL) {
-    const port = process.env.PORT || 3000;
+    const port = process.env.PORT || 3000 ;
     app.listen(port, () => {
         console.log(`Server is running at http://localhost:${port}`);
     });
 }
 
-export default app;
+export default app; 
