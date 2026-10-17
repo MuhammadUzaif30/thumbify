@@ -2,7 +2,7 @@ import dns from "node:dns";
 dns.setServers(["8.8.8.8", "1.1.1.1"]);
 
 import "dotenv/config";
-import express, { Request, Response } from "express";
+import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import session from "express-session";
 import MongoStore from "connect-mongo";
@@ -21,7 +21,7 @@ declare module "express-session" {
 const app = express();
 const isProd = process.env.NODE_ENV === "production";
 
-// needed behind Render's proxy so secure cookies and https URLs work
+// needed behind Vercel's proxy so secure cookies and https URLs work
 app.set("trust proxy", 1);
 
 app.use(cors({
@@ -32,6 +32,17 @@ app.use(cors({
 app.use(express.json());
 app.use("/images", express.static("images"));
 
+// Serverless: make sure the DB is connected before handling any request.
+// connectDB() must be safe to call many times (see the guard in configs/db.ts).
+app.use(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        await connectDB();
+        next();
+    } catch (err) {
+        next(err);
+    }
+});
+
 app.use(session({
     secret: process.env.SESSION_SECRET as string,
     resave: false,
@@ -39,7 +50,9 @@ app.use(session({
     cookie: {
         maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
         secure: isProd,
-        sameSite: "lax",
+        // frontend and backend are on different *.vercel.app domains,
+        // so in production the cookie must be "none" (requires secure: true)
+        sameSite: isProd ? "none" : "lax",
     },
     store: MongoStore.create({
         mongoUrl: process.env.MONGO_URI as string,
@@ -55,13 +68,12 @@ app.use("/api/auth", AuthRouter);
 app.use("/api/thumbnail", ThumbnailRouter);
 app.use("/api/user", UserRouter);
 
-const port = process.env.PORT || 3000;
-
-const start = async () => {
-    await connectDB();
+// Only start a listener locally. On Vercel the platform calls the exported app.
+if (!process.env.VERCEL) {
+    const port = process.env.PORT || 3000;
     app.listen(port, () => {
         console.log(`Server is running at http://localhost:${port}`);
     });
-};
+}
 
-start();
+export default app;
