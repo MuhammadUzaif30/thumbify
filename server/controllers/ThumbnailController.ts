@@ -103,7 +103,8 @@ export const generateThumbnail = async (req: Request, res: Response) => {
         fs.writeFileSync(path.join(IMAGES_DIR, filename), finalBuffer);
 
         thumbnail.prompt_used = prompt;
-        thumbnail.image_url = `${req.protocol}://${req.get("host")}/images/${filename}`;
+        const baseUrl = process.env.SERVER_URL || `${req.protocol}://${req.get("host")}`;
+        thumbnail.image_url = `${baseUrl}/images/${filename}`;        
         thumbnail.isGenerating = false;
         await thumbnail.save();
 

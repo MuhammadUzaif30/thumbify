@@ -7,9 +7,10 @@ import cors from "cors";
 import session from "express-session";
 import MongoStore from "connect-mongo";
 import connectDB from "./configs/db.js";
-import AuthRouter from "./routes/AuthRoutes.js"; 
+import AuthRouter from "./routes/AuthRoutes.js";
 import ThumbnailRouter from "./routes/ThumbnailRoutes.js";
 import UserRouter from "./routes/UserRoutes.js";
+
 declare module "express-session" {
     interface SessionData {
         isLoggedIn: boolean;
@@ -18,19 +19,28 @@ declare module "express-session" {
 }
 
 const app = express();
+const isProd = process.env.NODE_ENV === "production";
+
+// needed behind Render's proxy so secure cookies and https URLs work
+app.set("trust proxy", 1);
 
 app.use(cors({
-    origin: ["http://localhost:5173"],
+    origin: ["http://localhost:5173", process.env.CLIENT_URL].filter(Boolean) as string[],
     credentials: true,
 }));
 
 app.use(express.json());
+app.use("/images", express.static("images"));
 
 app.use(session({
     secret: process.env.SESSION_SECRET as string,
     resave: false,
     saveUninitialized: false,
-    cookie: { maxAge: 1000 * 60 * 60 * 24 * 7 }, // 7 days
+    cookie: {
+        maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+        secure: isProd,
+        sameSite: "lax",
+    },
     store: MongoStore.create({
         mongoUrl: process.env.MONGO_URI as string,
         collectionName: "sessions",
@@ -42,9 +52,9 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 app.use("/api/auth", AuthRouter);
-app.use("/api/thumbnail" , ThumbnailRouter)
-app.use("/api/user" , UserRouter)
-   app.use("/images", express.static("images"));
+app.use("/api/thumbnail", ThumbnailRouter);
+app.use("/api/user", UserRouter);
+
 const port = process.env.PORT || 3000;
 
 const start = async () => {
